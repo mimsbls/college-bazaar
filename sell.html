@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sell Item</title>
+    <title>Sell Item - College Bazaar</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
-        .box { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; margin: 0; }
+        .box { max-width: 400px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0088cc; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        #status { font-size: 14px; color: #d9534f; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
+        .file-label { display: block; margin-top: 10px; font-weight: bold; color: #555; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>Post Product (₹5 Fee)</h2>
-        <input id="n" placeholder="Product Name">
-        <input id="p" type="number" placeholder="Price">
-        <textarea id="d" placeholder="Description & Phone"></textarea>
-        <input id="i" placeholder="Image URL">
-        <button class="btn" onclick="pay()">Pay ₹5 & Post</button>
+        <h2>Post Your Ad 🎓</h2>
+        <div id="status">Uploading Image... Please wait ⏳</div>
+        
+        <input id="n" placeholder="Product Name (e.g. Cycle)">
+        <input id="p" type="number" placeholder="Price (₹)">
+        <textarea id="d" rows="3" placeholder="Description & Your Phone No."></textarea>
+        
+        <label class="file-label">Select Product Photo:</label>
+        <input type="file" id="fileInput" accept="image/*">
+
+        <button class="btn" id="mainBtn">Pay ₹5 & Post Ad</button>
     </div>
 
     <script type="module">
@@ -33,32 +41,72 @@
             projectId: "college-bazaar-e68cd",
             storageBucket: "college-bazaar-e68cd.firebasestorage.app",
             messagingSenderId: "1795308257",
-            appId: "1:1795308257:web:217ec241fe97febb2455a0",
-            measurementId: "G-8YW1D9GXBV"
+            appId: "1:1795308257:web:217ec241fe97febb2455a0"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.pay = () => {
-            var options = {
-                "key": "rzp_test_SUbyWO4SEc3wka",
-                "amount": "500",
-                "handler": async function (response) {
-                    await addDoc(collection(db, "products"), {
-                        name: document.getElementById('n').value,
-                        price: document.getElementById('p').value,
-                        desc: document.getElementById('d').value,
-                        imageUrl: document.getElementById('i').value,
-                        sellerEmail: auth.currentUser.email, // Zaruri line
-                        timestamp: serverTimestamp()
-                    });
-                    alert("Posted!"); location.href="index.html";
-                }
-            };
-            new Razorpay(options).open();
+        // ImgBB Upload Function with YOUR API KEY
+        async function uploadToImgBB(file) {
+            const formData = new FormData();
+            formData.append("image", file);
+            const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+            return data.data.url;
         }
+
+        document.getElementById('mainBtn').onclick = async () => {
+            const name = document.getElementById('n').value;
+            const price = document.getElementById('p').value;
+            const desc = document.getElementById('d').value;
+            const file = document.getElementById('fileInput').files[0];
+
+            if(!name || !price || !file) return alert("Bhai, saari details aur photo bharo!");
+
+            // Start Loading
+            document.getElementById('status').style.display = "block";
+            document.getElementById('mainBtn').disabled = true;
+            document.getElementById('mainBtn').innerText = "Uploading...";
+
+            try {
+                // 1. Photo Upload
+                const uploadedUrl = await uploadToImgBB(file);
+
+                // 2. Razorpay Payment
+                var options = {
+                    "key": "rzp_test_SUbyWO4SEc3wka",
+                    "amount": "500",
+                    "name": "College Bazaar",
+                    "handler": async function (response) {
+                        // 3. Save to Firebase after Payment Success
+                        await addDoc(collection(db, "products"), {
+                            name: name,
+                            price: price,
+                            desc: desc,
+                            imageUrl: uploadedUrl,
+                            sellerEmail: auth.currentUser.email,
+                            timestamp: serverTimestamp()
+                        });
+                        alert("Ad Posted Successfully! ✅");
+                        location.href = "index.html";
+                    }
+                };
+                var rzp1 = new Razorpay(options);
+                rzp1.open();
+
+            } catch (err) {
+                alert("Upload failed! Internet check karo.");
+            } finally {
+                document.getElementById('status').style.display = "none";
+                document.getElementById('mainBtn').disabled = false;
+                document.getElementById('mainBtn').innerText = "Pay ₹5 & Post Ad";
+            }
+        };
     </script>
 </body>
 </html>
