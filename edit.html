@@ -2,36 +2,37 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Ad</title>
+    <title>Edit My Ad</title>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
         .box { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        input, textarea { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; }
-        #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 10px; }
+        #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 18px; }
+        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="box">
         <h2 style="text-align:center; color:#0088cc;">Edit Your Ad 📝</h2>
-        <div id="status">Updating your ad... ⏳</div>
+        <div id="status">Updating your ad... Please wait ⏳</div>
         
-        <label>Product Name</label>
-        <input id="n" type="text">
-        
-        <label>Price (₹)</label>
-        <input id="p" type="number">
-        
-        <label>Description & Phone</label>
-        <textarea id="d" rows="5"></textarea>
-        
-        <label>Update Photo (Optional):</label>
-        <input type="file" id="f" accept="image/*">
-        
-        <button class="btn-save" id="saveBtn">Save Changes ✅</button>
-        <button class="btn-del" id="delBtn">Delete Ad 🗑️</button>
-        <p style="text-align:center;"><a href="index.html" style="color:#666; text-decoration:none; font-size:14px;">Cancel</a></p>
+        <div id="loading-msg" style="text-align:center; color:#888;">Fetching your data...</div>
+
+        <div id="form-content" style="display:none;">
+            <label>Product Name</label>
+            <input id="n" type="text">
+            
+            <label>Price (₹)</label>
+            <input id="p" type="number">
+            
+            <label>Description & Contact</label>
+            <textarea id="d" rows="5"></textarea>
+            
+            <button class="btn-save" id="saveBtn">Save Changes ✅</button>
+            <button class="btn-del" id="delBtn">Delete This Ad 🗑️</button>
+        </div>
+        <p style="text-align:center; margin-top:15px;"><a href="index.html" style="color:#666; text-decoration:none;">Cancel</a></p>
     </div>
 
     <script type="module">
@@ -46,42 +47,37 @@
         const docRef = doc(db, "products", id);
 
         // --- Purana Data Load Karo ---
-        getDoc(docRef).then(snap => {
+        async function getOldData() {
+            const snap = await getDoc(docRef);
             if(snap.exists()){
                 const data = snap.data();
                 document.getElementById('n').value = data.name || "";
                 document.getElementById('p').value = data.price || "";
                 document.getElementById('d').value = data.desc || "";
+                document.getElementById('loading-msg').style.display = 'none';
+                document.getElementById('form-content').style.display = 'block';
             }
-        });
+        }
+        getOldData();
 
-        // --- Update Karo ---
+        // --- Save Update ---
         document.getElementById('saveBtn').onclick = async () => {
             document.getElementById('status').style.display = "block";
             document.getElementById('saveBtn').disabled = true;
             
-            let updateData = {
+            await updateDoc(docRef, {
                 name: document.getElementById('n').value,
                 price: document.getElementById('p').value,
                 desc: document.getElementById('d').value
-            };
-
-            const file = document.getElementById('f').files[0];
-            if(file){
-                const fd = new FormData(); fd.append("image", file);
-                const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {method:"POST", body:fd});
-                const j = await res.json();
-                updateData.images = [j.data.url]; // Nayi image update
-            }
-
-            await updateDoc(docRef, updateData);
-            alert("Success! Ad updated. ✅");
+            });
+            
+            alert("Updated Successfully! ✅");
             location.href = "index.html";
         };
 
-        // --- Delete Karo ---
+        // --- Delete Ad ---
         document.getElementById('delBtn').onclick = async () => {
-            if(confirm("Pakka delete karna hai?")){
+            if(confirm("Bhai, kya aap sach mein ye ad hatana chahte ho?")){
                 await deleteDoc(docRef);
                 location.href = "index.html";
             }
