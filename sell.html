@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Product - College Bazaar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Post Your Product 📦</h1>
+    </header>
+
+    <div class="sell-container" style="padding: 20px; max-width: 500px; margin: auto;">
+        <input type="text" id="pName" placeholder="Product Name (e.g. Study Table)" style="width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc;">
+        <input type="number" id="pPrice" placeholder="Price (₹)" style="width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc;">
+        <textarea id="pDesc" placeholder="Description & Your Contact Number" style="width:100%; height:100px; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc;"></textarea>
+        
+        <p>Upload Product Image (URL for now):</p>
+        <input type="text" id="pImgUrl" placeholder="Paste Image Link here" style="width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc;">
+        
+        <div style="background: #fff; padding: 15px; border-radius: 10px; text-align: center; border: 1px dashed #ff5722;">
+            <p>Listing Fee: <b>₹5</b></p>
+            <button onclick="payAndPublish()" style="background:#28a745; width:100%; padding:15px; font-size:18px;">Pay ₹5 & Publish</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:9f2d5926063c2a592455a0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.payAndPublish = function() {
+            // Payment Logic (Abhi direct save kar rahe hain for testing)
+            // Asli payment ke liye Razorpay Key lagani hogi
+            saveProduct();
+        }
+
+        async function saveProduct() {
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            const desc = document.getElementById('pDesc').value;
+            const img = document.getElementById('pImgUrl').value;
+
+            if(!name || !price) { alert("Please fill details!"); return; }
+
+            try {
+                await addDoc(collection(db, "products"), {
+                    name: name,
+                    price: price,
+                    desc: desc,
+                    imageUrl: img,
+                    timestamp: serverTimestamp()
+                });
+                alert("Product Successfully Added to Group!");
+                window.location.href = "index.html";
+            } catch (e) {
+                console.error("Error: ", e);
+                alert("Error saving product. Check Firebase Rules!");
+            }
+        }
+    </script>
+</body>
+</html>
