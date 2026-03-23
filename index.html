@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Bazaar Feed</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Campus Market 🎓</h1>
+    </header>
+
+    <div id="product-feed" class="feed">
+        <p style="text-align:center;">Loading products...</p>
+    </div>
+
+    <a href="sell.html" class="sell-btn">SELL ₹5</a>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Aapka Config jo screenshot mein tha
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:9f2d5926063c2a592455a0",
+            measurementId: "G-10JPFK7ELY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Feed Load Karne ka Logic
+        const q = query(collection(db, "products"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById('product-feed');
+            feed.innerHTML = "";
+            if (snapshot.empty) {
+                feed.innerHTML = "<p>Koi product nahi hai. Pehle sell button pe click karke add karein!</p>";
+            }
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                feed.innerHTML += `
+                    <div class="card">
+                        <img src="${p.imageUrl || 'https://via.placeholder.com/300'}" class="p-img">
+                        <div class="p-info">
+                            <h3>${p.name}</h3>
+                            <p class="price">₹${p.price}</p>
+                            <button onclick="alert('Description: ${p.desc}')">Description</button>
+                            <button class="chat-btn" onclick="alert('Comment section coming soon!')">Live Comments</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
