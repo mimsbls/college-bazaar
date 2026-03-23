@@ -1,106 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Ad - College Bazaar</title>
+    <title>Edit Ad</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
-        .box { max-width: 450px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0088cc; margin-top: 0; }
-        label { font-weight: bold; display: block; margin-top: 15px; color: #444; font-size: 14px; }
-        input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; }
-        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 25px; }
-        .btn-delete { background: #fff; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 12px; }
-        #status { color: #d9534f; text-align: center; font-weight: bold; display: none; margin-top: 10px; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
+        .box { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>Update Your Ad 📝</h2>
-        <div id="status">Updating Data... ⏳</div>
-
-        <label>Product Name</label>
-        <input id="n" type="text">
-        
-        <label>Price (₹)</label>
+        <h2>Edit Product</h2>
+        <input id="n">
         <input id="p" type="number">
-        
-        <label>Description</label>
-        <textarea id="d" rows="3"></textarea>
-        
+        <textarea id="d" rows="4"></textarea>
         <label>Change Photo (Optional):</label>
-        <input type="file" id="newFile" accept="image/*">
-        
-        <button class="btn-save" id="saveBtn">Save Changes</button>
-        <button class="btn-delete" id="delBtn">Delete Ad</button>
-        <a href="index.html" style="display:block; text-align:center; margin-top:15px; color:#666; text-decoration:none;">← Back</a>
+        <input type="file" id="f" accept="image/*">
+        <button class="btn-save" id="sBtn">Save Changes</button>
+        <button onclick="history.back()" style="width:100%; margin-top:10px; background:none; border:none; color:#666;">Cancel</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
-            authDomain: "college-bazaar-e68cd.firebaseapp.com",
-            projectId: "college-bazaar-e68cd",
-            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
-            messagingSenderId: "1795308257",
-            appId: "1:1795308257:web:217ec241fe97febb2455a0"
-        };
-
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
-        let oldImageUrl = "";
+        const id = new URLSearchParams(window.location.search).get('id');
+        const ref = doc(db, "products", id);
+        const snap = await getDoc(ref);
+        if(snap.exists()){
+            const data = snap.data();
+            document.getElementById('n').value = data.name;
+            document.getElementById('p').value = data.price;
+            document.getElementById('d').value = data.desc;
+        }
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user || !productId) return;
-            const docRef = doc(db, "products", productId);
-            const snap = await getDoc(docRef);
-            if(snap.exists()){
-                const data = snap.data();
-                document.getElementById('n').value = data.name;
-                document.getElementById('p').value = data.price;
-                document.getElementById('d').value = data.desc;
-                oldImageUrl = data.imageUrl;
+        document.getElementById('sBtn').onclick = async () => {
+            let update = { name: document.getElementById('n').value, price: document.getElementById('p').value, desc: document.getElementById('d').value };
+            const file = document.getElementById('f').files[0];
+            if(file) {
+                const fd = new FormData(); fd.append("image", file);
+                const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {method:"POST", body:fd});
+                const j = await res.json(); update.images = [j.data.url];
             }
-
-            document.getElementById('saveBtn').onclick = async () => {
-                document.getElementById('status').style.display = "block";
-                const file = document.getElementById('newFile').files[0];
-                let finalUrl = oldImageUrl;
-
-                if(file){
-                    const formData = new FormData();
-                    formData.append("image", file);
-                    const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {method:"POST", body:formData});
-                    const d = await res.json();
-                    finalUrl = d.data.url;
-                }
-
-                await updateDoc(docRef, {
-                    name: document.getElementById('n').value,
-                    price: document.getElementById('p').value,
-                    desc: document.getElementById('d').value,
-                    imageUrl: finalUrl
-                });
-                alert("Updated! ✅");
-                location.href = "index.html";
-            };
-
-            document.getElementById('delBtn').onclick = async () => {
-                if(confirm("Delete permanently?")){
-                    await deleteDoc(docRef);
-                    location.href = "index.html";
-                }
-            };
-        });
+            await updateDoc(ref, update);
+            alert("Updated!"); location.href="index.html";
+        };
     </script>
 </body>
 </html>
