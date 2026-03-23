@@ -8,27 +8,23 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
-    <header><h1>Post Your Product 🎓</h1></header>
-
-    <div class="sell-container" style="padding:20px; max-width:500px; margin:auto;">
-        <input type="text" id="pName" placeholder="Product Name (e.g. Cycle)">
-        <input type="number" id="pPrice" placeholder="Price (₹)">
-        <textarea id="pDesc" placeholder="Description & Contact Details"></textarea>
-        <input type="text" id="pImgUrl" placeholder="Paste Image Link Here">
-        
-        <div class="payment-box" style="text-align:center; border:2px dashed #ff5722; padding:20px; border-radius:10px;">
-            <p>Listing Fee: <b>₹5</b></p>
-            <button id="rzp-button" onclick="startPayment()" style="background:#28a745; width:100%; color:white; padding:15px; border-radius:10px;">Pay ₹5 & Publish</button>
+    <div id="auth-check" style="display:none;">
+        <header><h1>Post Your Product 🎓</h1></header>
+        <div class="sell-container" style="padding:20px; max-width:500px; margin:auto;">
+            <input type="text" id="pName" placeholder="Product Name">
+            <input type="number" id="pPrice" placeholder="Price (₹)">
+            <textarea id="pDesc" placeholder="Contact & Description"></textarea>
+            <input type="text" id="pImgUrl" placeholder="Image URL">
+            <button onclick="payAndPublish()" style="background:#28a745; width:100%; color:white; padding:15px; margin-top:10px;">Pay ₹5 & Publish</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Yahan apna Firebase Config wala code paste karna
-        const firebaseConfig = { 
+        const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfI",
             authDomain: "college-bazaar-e68cd.firebaseapp.com",
             projectId: "college-bazaar-e68cd",
@@ -36,42 +32,49 @@
             messagingSenderId: "1795308257",
             appId: "1:1795308257:web:9f2d5926063c2a592455a0"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        window.startPayment = function() {
+        // Security Check: Agar login nahi hai toh bahar pheko
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-check').style.display = "block";
+            } else {
+                alert("Pehle login karke aao bhai!");
+                window.location.href = "index.html";
+            }
+        });
+
+        window.payAndPublish = function() {
             const name = document.getElementById('pName').value;
-            if(!name) { alert("Pehle details bharo!"); return; }
+            if(!name) return alert("Details bharo!");
 
             var options = {
-                "key": "rzp_test_SUbyWO4SEc3wka", // <--- AAPKI KEY DAAL DI HAI
-                "amount": "500", // ₹5 in paise
+                "key": "rzp_test_SUbyWO4SEc3wka", // Aapki Key
+                "amount": "500", 
                 "currency": "INR",
                 "name": "College Bazaar",
                 "handler": function (response){
-                    // Agar payment success hui toh ye function chalega
-                    saveToFirebase();
-                },
-                "theme": {"color": "#0088cc"}
+                    saveProduct();
+                }
             };
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
+            var rzp = new Razorpay(options);
+            rzp.open();
         }
 
-        async function saveToFirebase() {
-            try {
-                await addDoc(collection(db, "products"), {
-                    name: document.getElementById('pName').value,
-                    price: document.getElementById('pPrice').value,
-                    desc: document.getElementById('pDesc').value,
-                    imageUrl: document.getElementById('pImgUrl').value,
-                    sellerId: auth.currentUser ? auth.currentUser.uid : "Anonymous",
-                    timestamp: serverTimestamp()
-                });
-                alert("Payment Success! Product is now Live.");
-                window.location.href = "index.html";
-            } catch (e) { alert("Error saving product!"); }
+        async function saveProduct() {
+            await addDoc(collection(db, "products"), {
+                name: document.getElementById('pName').value,
+                price: document.getElementById('pPrice').value,
+                desc: document.getElementById('pDesc').value,
+                imageUrl: document.getElementById('pImgUrl').value,
+                sellerId: auth.currentUser.uid,
+                timestamp: serverTimestamp()
+            });
+            alert("Product Live Ho Gaya!");
+            window.location.href = "index.html";
         }
     </script>
 </body>
