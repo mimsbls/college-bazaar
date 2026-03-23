@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #fff; }
+        .slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; height: 350px; background: #eee; }
+        .slider img { width: 100%; object-fit: contain; scroll-snap-align: start; flex-shrink: 0; }
+        .info { padding: 20px; }
+        .price { font-size: 26px; color: #28a745; font-weight: bold; }
+        .desc { white-space: pre-wrap; margin-top: 15px; color: #333; line-height: 1.5; }
+        .back { display: block; width: 100%; padding: 15px; border: none; background: #0088cc; color: #fff; border-radius: 10px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="slider" id="s"></div>
+    <div class="info">
+        <p class="price" id="pr"></p>
+        <h1 id="nm"></h1>
+        <hr>
+        <p class="desc" id="ds"></p>
+        <button class="back" onclick="history.back()">← Back to Feed</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const id = new URLSearchParams(window.location.search).get('id');
+        const d = await getDoc(doc(db, "products", id));
+        if(d.exists()) {
+            const p = d.data();
+            document.getElementById('nm').innerText = p.name;
+            document.getElementById('pr').innerText = "₹" + p.price;
+            document.getElementById('ds').innerText = p.desc;
+            const imgs = p.images || [p.imageUrl];
+            imgs.forEach(u => document.getElementById('s').innerHTML += `<img src="${u}">`);
+        }
+    </script>
+</body>
+</html>
