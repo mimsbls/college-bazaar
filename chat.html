@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Discussion - College Bazaar</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <button onclick="location.href='index.html'" style="float:left; background:none; border:none; color:white; font-size:20px; cursor:pointer;">⬅️</button>
+        <h2 id="product-title">Loading Chat...</h2>
+    </header>
+
+    <div id="comments-box" style="padding:15px; display:flex; flex-direction:column; gap:10px; margin-bottom: 80px;">
+        </div>
+
+    <div style="position:fixed; bottom:0; width:100%; background:white; padding:10px; display:flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
+        <input type="text" id="msgInput" placeholder="Write a comment..." style="flex:1; padding:12px; border-radius:25px; border:1px solid #ccc; outline:none;">
+        <button onclick="sendComment()" style="background:#0088cc; color:white; border:none; padding:10px 20px; border-radius:25px; margin-left:10px; font-weight:bold;">Send</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:9f2d5926063c2a592455a0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // URL se Product ID nikalna
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        let productOwnerId = "";
+
+        // Product Details aur Owner nikalna
+        async function loadProductInfo() {
+            const productRef = doc(db, "products", productId);
+            const productSnap = await getDoc(productRef);
+            if (productSnap.exists()) {
+                document.getElementById('product-title').innerText = productSnap.data().name;
+                productOwnerId = productSnap.data().sellerId;
+            }
+        }
+        loadProductInfo();
+
+        // Comments Load Karna (Live)
+        const q = query(collection(db, "comments"), where("productId", "==", productId), orderBy("timestamp", "asc"));
+        onSnapshot(q, (snapshot) => {
+            const box = document.getElementById('comments-box');
+            box.innerHTML = "";
+            snapshot.forEach(docSnap => {
+                const c = docSnap.data();
+                const isSellerMsg = (c.userId === productOwnerId);
+                
+                // Highlight Style agar Seller hai
+                const cardStyle = isSellerMsg 
+                    ? "background:#e3f2fd; border:1px solid #0088cc; align-self: flex-start; border-left: 5px solid #0088cc;" 
+                    : "background:#f1f1f1; align-self: flex-start;";
+
+                box.innerHTML += `
+                    <div style="padding:10px; border-radius:12px; max-width:80%; ${cardStyle}">
+                        <small style="color:#555; font-weight:bold;">${isSellerMsg ? '⭐ SELLER' : 'Student'}</small>
+                        <div style="margin-top:4px;">${c.text}</div>
+                    </div>
+                `;
+            });
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // Comment Bhejne ka Function
+        window.sendComment = async function() {
+            const text = document.getElementById('msgInput').value;
+            if (!text || !auth.currentUser) {
+                alert("Please login to comment!");
+                return;
+            }
+
+            await addDoc(collection(db, "comments"), {
+                productId: productId,
+                text: text,
+                userId: auth.currentUser.uid,
+                userName: auth.currentUser.displayName,
+                timestamp: serverTimestamp()
+            });
+            document.getElementById('msgInput').value = "";
+        };
+    </script>
+</body>
+</html>
