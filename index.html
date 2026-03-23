@@ -3,41 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>College Bazaar</title>
+    <title>College Bazaar 🎓</title>
     <style>
-        body { font-family: -apple-system, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
-        #login-page { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; text-align: center; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: #f0f2f5; }
+        #login-page { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; text-align: center; }
         #main-page { display: none; }
-        
-        /* Mobile Cards */
-        .card { background: white; border-radius: 15px; margin: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .card img { width: 100%; height: 250px; object-fit: cover; }
-        .card-content { padding: 15px; }
-        .card h3 { margin: 0; font-size: 20px; color: #1c1e21; }
-        .card .price { color: #28a745; font-size: 22px; font-weight: bold; margin: 5px 0; }
-        
-        /* Buttons */
-        .btn { background: #4285F4; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px; }
-        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 18px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(255,87,34,0.4); z-index: 1000; }
-        
-        header { background: #0088cc; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        header h2 { margin: 0; font-size: 22px; }
+        .card { background: white; border-radius: 15px; margin: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .card-body { padding: 15px; }
+        .price { color: #28a745; font-size: 22px; font-weight: bold; margin: 0; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .chat-btn { flex: 2; background: #0088cc; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .edit-btn { flex: 1; background: #ffc107; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        header { background: #0088cc; color: white; padding: 15px; display: flex; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
-
     <div id="login-page">
-        <h1 style="font-size: 32px; margin-bottom: 10px;">College Bazaar 🎓</h1>
-        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">Buy & Sell within Campus</p>
-        <button class="btn" id="loginBtn">Sign in with Google</button>
+        <h1>College Bazaar 🎓</h1>
+        <button onclick="login()" style="padding:15px 30px; font-size:18px; cursor:pointer;">Sign in with Google</button>
     </div>
 
     <div id="main-page">
         <header>
-            <h2>College Bazaar</h2>
-            <button id="logoutBtn" style="background:transparent; border:1px solid white; color:white; padding:5px 10px; border-radius:5px;">Logout</button>
+            <span>College Bazaar</span>
+            <button onclick="logout()" style="background:none; border:1px solid white; color:white;">Logout</button>
         </header>
-        <div id="feed" style="padding-bottom: 100px;"></div>
+        <div id="feed" style="padding-bottom: 80px;"></div>
         <a href="sell.html" class="sell-btn">➕ SELL (₹5)</a>
     </div>
 
@@ -46,7 +39,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Same Config as before
         const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
             authDomain: "college-bazaar-e68cd.firebaseapp.com",
@@ -62,34 +54,39 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
-        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        window.login = () => signInWithPopup(auth, provider);
+        window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('login-page').style.display = "none";
                 document.getElementById('main-page').style.display = "block";
-                loadProducts();
+                loadProducts(user.email);
             } else {
                 document.getElementById('login-page').style.display = "flex";
                 document.getElementById('main-page').style.display = "none";
             }
         });
 
-        function loadProducts() {
+        function loadProducts(myEmail) {
             const q = query(collection(db, "products"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snap) => {
                 const feed = document.getElementById('feed');
                 feed.innerHTML = "";
                 snap.forEach(doc => {
                     const p = doc.data();
+                    const isOwner = p.sellerEmail === myEmail;
                     feed.innerHTML += `
                         <div class="card">
-                            <img src="${p.imageUrl || 'https://via.placeholder.com/400'}" alt="product">
-                            <div class="card-content">
+                            <img src="${p.imageUrl || 'https://via.placeholder.com/400'}">
+                            <div class="card-body">
                                 <p class="price">₹${p.price}</p>
                                 <h3>${p.name}</h3>
-                                <p style="color:#666; font-size:14px; margin-top:10px;">${p.desc}</p>
+                                <p style="color:#666;">${p.desc}</p>
+                                <div class="btn-group">
+                                    ${isOwner ? `<button class="edit-btn" onclick="alert('Edit logic coming soon!')">📝 Edit</button>` : ''}
+                                    <button class="chat-btn" onclick="location.href='chat.html?id=${doc.id}'">💬 Live Chat</button>
+                                </div>
                             </div>
                         </div>`;
                 });
