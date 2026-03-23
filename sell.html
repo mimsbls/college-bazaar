@@ -1,39 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sell - College Bazaar</title>
+    <title>Sell Item</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
-        .box { max-width: 500px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0088cc; font-size: 24px; }
-        input, textarea { width: 100%; padding: 15px; margin: 12px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
-        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 18px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .cancel { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; font-size: 16px; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
+        .box { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div class="box">
-        <h2>List New Item 🎓</h2>
-        <p style="text-align:center; color:#888;">Listing Fee: ₹5 only</p>
-        
-        <input id="n" placeholder="Product Name (e.g. Book)">
-        <input id="p" type="number" placeholder="Price (₹)">
-        <textarea id="d" rows="4" placeholder="Description & Contact Number"></textarea>
-        <input id="i" placeholder="Image Link (URL)">
-        
-        <button class="btn" onclick="pay()">Pay ₹5 & Post Ad</button>
-        <a href="index.html" class="cancel">← Back to Home</a>
+        <h2>Post Product (₹5 Fee)</h2>
+        <input id="n" placeholder="Product Name">
+        <input id="p" type="number" placeholder="Price">
+        <textarea id="d" placeholder="Description & Phone"></textarea>
+        <input id="i" placeholder="Image URL">
+        <button class="btn" onclick="pay()">Pay ₹5 & Post</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
-        // Same Config as before
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
             authDomain: "college-bazaar-e68cd.firebaseapp.com",
@@ -45,25 +38,23 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         window.pay = () => {
-            const name = document.getElementById('n').value;
-            if(!name) return alert("Please enter name");
-
             var options = {
                 "key": "rzp_test_SUbyWO4SEc3wka",
                 "amount": "500",
-                "name": "College Bazaar",
                 "handler": async function (response) {
                     await addDoc(collection(db, "products"), {
-                        name: name,
+                        name: document.getElementById('n').value,
                         price: document.getElementById('p').value,
                         desc: document.getElementById('d').value,
                         imageUrl: document.getElementById('i').value,
+                        sellerEmail: auth.currentUser.email, // Zaruri line
                         timestamp: serverTimestamp()
                     });
-                    alert("Item Published!"); window.location.href="index.html";
+                    alert("Posted!"); location.href="index.html";
                 }
             };
             new Razorpay(options).open();
