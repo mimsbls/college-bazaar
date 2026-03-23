@@ -15,7 +15,7 @@
         .btn-detail { background: #6c757d; color: white; }
         .btn-chat { background: #0088cc; color: white; }
         .btn-edit { background: #fff; color: #dc3545; border: 1px solid #dc3545; display: block; margin-top: 10px; text-align: center; padding: 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; }
-        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 99; }
         #login-screen { text-align: center; padding-top: 100px; display: none; }
         #app { display: none; }
     </style>
@@ -66,7 +66,6 @@
                 snap.forEach(doc => {
                     const p = doc.data();
                     const img = p.images ? p.images[0] : (p.imageUrl || 'https://via.placeholder.com/400');
-                    
                     html += `
                     <div class="card">
                         <img src="${img}">
