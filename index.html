@@ -1,30 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>College Bazaar</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
-        #login-page { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #main-page { display: none; padding: 20px; }
-        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { background: #4285F4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .sell-btn { position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        #login-page { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; text-align: center; }
+        #main-page { display: none; }
+        
+        /* Mobile Cards */
+        .card { background: white; border-radius: 15px; margin: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card img { width: 100%; height: 250px; object-fit: cover; }
+        .card-content { padding: 15px; }
+        .card h3 { margin: 0; font-size: 20px; color: #1c1e21; }
+        .card .price { color: #28a745; font-size: 22px; font-weight: bold; margin: 5px 0; }
+        
+        /* Buttons */
+        .btn { background: #4285F4; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; max-width: 300px; }
+        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 18px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(255,87,34,0.4); z-index: 1000; }
+        
+        header { background: #0088cc; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h2 { margin: 0; font-size: 22px; }
     </style>
 </head>
 <body>
 
     <div id="login-page">
+        <h1 style="font-size: 32px; margin-bottom: 10px;">College Bazaar 🎓</h1>
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">Buy & Sell within Campus</p>
         <button class="btn" id="loginBtn">Sign in with Google</button>
     </div>
 
     <div id="main-page">
-        <header style="display:flex; justify-content:space-between; background:#0088cc; color:white; padding:15px;">
-            <h2>College Bazaar 🎓</h2>
-            <button id="logoutBtn" style="background:none; border:1px solid white; color:white; cursor:pointer;">Logout</button>
+        <header>
+            <h2>College Bazaar</h2>
+            <button id="logoutBtn" style="background:transparent; border:1px solid white; color:white; padding:5px 10px; border-radius:5px;">Logout</button>
         </header>
-        <div id="feed"></div>
-        <a href="sell.html" class="sell-btn">SELL ₹5</a>
+        <div id="feed" style="padding-bottom: 100px;"></div>
+        <a href="sell.html" class="sell-btn">➕ SELL (₹5)</a>
     </div>
 
     <script type="module">
@@ -32,6 +46,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Same Config as before
         const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
             authDomain: "college-bazaar-e68cd.firebaseapp.com",
@@ -70,9 +85,12 @@
                     const p = doc.data();
                     feed.innerHTML += `
                         <div class="card">
-                            <img src="${p.imageUrl}" style="width:100%; border-radius:8px;">
-                            <h3>${p.name} - ₹${p.price}</h3>
-                            <p>${p.desc}</p>
+                            <img src="${p.imageUrl || 'https://via.placeholder.com/400'}" alt="product">
+                            <div class="card-content">
+                                <p class="price">₹${p.price}</p>
+                                <h3>${p.name}</h3>
+                                <p style="color:#666; font-size:14px; margin-top:10px;">${p.desc}</p>
+                            </div>
                         </div>`;
                 });
             });
