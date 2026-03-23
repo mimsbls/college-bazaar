@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Ad</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
+        .box { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+        #st { color: #d9534f; text-align: center; display: none; margin-bottom: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Post Product (₹5 Fee)</h2>
+        <div id="st">Processing... ⏳</div>
+        <input id="n" placeholder="Product Name">
+        <input id="p" type="number" placeholder="Price (₹)">
+        <textarea id="d" rows="3" placeholder="Description & Phone"></textarea>
+        <label style="font-size:12px;">Select Photos (Max 3):</label>
+        <input type="file" id="f" accept="image/*" multiple>
+        <button class="btn" id="postBtn">Pay ₹5 & Post Ad</button>
+        <p style="text-align:center;"><a href="index.html" style="color:#666; font-size:14px;">Cancel</a></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        document.getElementById('postBtn').onclick = async () => {
+            const files = document.getElementById('f').files;
+            if(files.length === 0) return alert("Photo select karo bhai!");
+            
+            document.getElementById('st').style.display = "block";
+            try {
+                let urls = [];
+                for(let file of files) {
+                    const fd = new FormData(); fd.append("image", file);
+                    const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {method:"POST", body:fd});
+                    const j = await res.json(); urls.push(j.data.url);
+                }
+
+                new Razorpay({
+                    "key": "rzp_test_SUbyWO4SEc3wka", "amount": "500", "handler": async function() {
+                        await addDoc(collection(db, "products"), {
+                            name: document.getElementById('n').value,
+                            price: document.getElementById('p').value,
+                            desc: document.getElementById('d').value,
+                            images: urls, sellerEmail: auth.currentUser.email, timestamp: serverTimestamp()
+                        });
+                        location.href="index.html";
+                    }
+                }).open();
+            } catch(e) { alert("Upload fail!"); }
+            document.getElementById('st').style.display = "none";
+        };
+    </script>
+</body>
+</html>

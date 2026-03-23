@@ -1,0 +1,81 @@
+\<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Ad</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .box { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; }
+        label { font-weight: bold; color: #555; display: block; margin-top: 15px; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 18px; width: 100%; }
+        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2 style="text-align:center; color:#0088cc;">Edit Your Ad 📝</h2>
+        
+        <div id="status">Updating your ad... ⏳</div>
+
+        <label>Product Name</label>
+        <input id="n" type="text">
+        
+        <label>Price (₹)</label>
+        <input id="p" type="number">
+        
+        <label>Description & Contact</label>
+        <textarea id="d" rows="6"></textarea>
+        
+        <button class="btn-save" id="saveBtn">Save Changes ✅</button>
+        <button class="btn-del" id="delBtn">Delete Ad 🗑️</button>
+        
+        <p style="text-align:center; margin-top:15px;"><a href="index.html" style="color:#666; text-decoration:none;">Cancel</a></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const id = new URLSearchParams(window.location.search).get('id');
+        const docRef = doc(db, "products", id);
+
+        // --- Purana Data Load Ho Raha Hai ---
+        getDoc(docRef).then(snap => {
+            if(snap.exists()){
+                const data = snap.data();
+                document.getElementById('n').value = data.name || "";
+                document.getElementById('p').value = data.price || "";
+                document.getElementById('d').value = data.desc || "";
+            }
+        });
+
+        // --- Fast Update ---
+        document.getElementById('saveBtn').onclick = async () => {
+            document.getElementById('status').style.display = "block";
+            
+            await updateDoc(docRef, {
+                name: document.getElementById('n').value,
+                price: document.getElementById('p').value,
+                desc: document.getElementById('d').value
+            });
+            
+            // Bina kisi delay ke turant redirect
+            location.href = "index.html";
+        };
+
+        // --- Delete ---
+        document.getElementById('delBtn').onclick = async () => {
+            if(confirm("Confirm Delete?")){
+                await deleteDoc(docRef);
+                location.href = "index.html";
+            }
+        };
+    </script>
+</body>
+</html>

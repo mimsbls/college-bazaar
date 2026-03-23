@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Bazaar</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
+        header { background: #0088cc; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .card { background: white; border-radius: 12px; margin: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 250px; object-fit: contain; background: #fafafa; }
+        .card-body { padding: 12px; }
+        .price { color: #28a745; font-size: 20px; font-weight: bold; }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 14px; }
+        .btn-detail { background: #6c757d; color: white; }
+        .btn-chat { background: #0088cc; color: white; }
+        .btn-edit { background: #fff; color: #dc3545; border: 1px solid #dc3545; display: block; margin-top: 10px; text-align: center; padding: 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; }
+        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #login-screen { text-align: center; padding-top: 100px; display: none; }
+        #app { display: none; }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <h1>College Bazaar 🎓</h1>
+        <button id="loginBtn" style="background:#4285F4; color:white; border:none; padding:15px 30px; border-radius:5px; cursor:pointer;">Sign in with Google</button>
+    </div>
+
+    <div id="app">
+        <header>
+            <b>College Bazaar 🎓</b>
+            <button id="logoutBtn" style="color:white; background:none; border:1px solid white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
+        </header>
+        <div id="feed" style="padding-bottom:100px;"></div>
+        <a href="sell.html" class="sell-btn">➕ SELL</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => location.reload());
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('login-screen').style.display = 'none';
+                loadData(user.email);
+            } else {
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('app').style.display = 'none';
+            }
+        });
+
+        function loadData(userEmail) {
+            onSnapshot(query(collection(db, "products"), orderBy("timestamp", "desc")), (snap) => {
+                let html = "";
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    const img = p.images ? p.images[0] : (p.imageUrl || 'https://via.placeholder.com/400');
+                    
+                    html += `
+                    <div class="card">
+                        <img src="${img}">
+                        <div class="card-body">
+                            <div class="price">₹${p.price}</div>
+                            <div style="font-weight:bold; margin:5px 0;">${p.name}</div>
+                            <div class="btn-group">
+                                <a href="product.html?id=${doc.id}" class="btn btn-detail">🔍 Details</a>
+                                <a href="chat.html?id=${doc.id}" class="btn btn-chat">💬 Chat</a>
+                            </div>
+                            ${p.sellerEmail === userEmail ? `<a href="edit.html?id=${doc.id}" class="btn-edit">📝 Edit My Ad</a>` : ''}
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('feed').innerHTML = html;
+            });
+        }
+    </script>
+</body>
+</html>
