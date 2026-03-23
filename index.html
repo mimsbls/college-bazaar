@@ -10,11 +10,12 @@
         .card img { width: 100%; height: 250px; object-fit: contain; background: #fafafa; }
         .card-body { padding: 12px; }
         .price { color: #28a745; font-size: 20px; font-weight: bold; }
-        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
-        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 14px; }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 14px; min-width: 80px; }
         .btn-detail { background: #6c757d; color: white; }
         .btn-chat { background: #0088cc; color: white; }
-        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-edit { background: #e3f2fd; color: #0088cc; border: 1px solid #0088cc; flex-basis: 100%; margin-top: 8px; }
+        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 99; }
     </style>
 </head>
 <body>
@@ -44,10 +45,11 @@
                     <img src="${img}">
                     <div class="card-body">
                         <div class="price">₹${p.price}</div>
-                        <div style="font-weight:bold; margin:5px 0;">${p.name}</div>
+                        <div style="font-weight:bold; margin:5px 0; font-size:18px;">${p.name}</div>
                         <div class="btn-group">
                             <a href="product.html?id=${doc.id}" class="btn btn-detail">🔍 Details</a>
-                            <a href="edit.html?id=${doc.id}" class="btn btn-chat" style="background:#0088cc;">📝 Edit</a>
+                            <a href="chat.html?id=${doc.id}" class="btn btn-chat">💬 Chat</a>
+                            <a href="edit.html?id=${doc.id}" class="btn btn-edit">📝 Edit My Ad</a>
                         </div>
                     </div>
                 </div>`;
