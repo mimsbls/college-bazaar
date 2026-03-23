@@ -1,68 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sell - College Bazaar</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .box { max-width: 400px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: #28a745; width: 100%; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
+        .box { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; }
+        .btn { background: #28a745; color: white; border: none; width: 100%; padding: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="box" id="sell-box" style="display:none;">
-        <h2 style="text-align:center; color:#0088cc;">Sell Something 🎓</h2>
-        <input type="text" id="pName" placeholder="Product Name">
-        <input type="number" id="pPrice" placeholder="Price (₹)">
-        <textarea id="pDesc" placeholder="Contact/Description"></textarea>
-        <input type="text" id="pImg" placeholder="Image Link (URL)">
-        <button class="btn" onclick="startPayment()">Pay ₹5 & Post</button>
-        <p style="text-align:center;"><a href="index.html">Cancel</a></p>
+    <div class="box">
+        <h2>Post Item (₹5 Fee)</h2>
+        <input id="n" placeholder="Product Name">
+        <input id="p" type="number" placeholder="Price">
+        <textarea id="d" placeholder="Description & Phone"></textarea>
+        <input id="i" placeholder="Image URL">
+        <button class="btn" onclick="pay()">Pay ₹5 & Post</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-       const firebaseConfig = {
-    apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
-    authDomain: "college-bazaar-e68cd.firebaseapp.com",
-    projectId: "college-bazaar-e68cd",
-    storageBucket: "college-bazaar-e68cd.firebasestorage.app",
-    messagingSenderId: "1795308257",
-    appId: "1:1795308257:web:217ec241fe97febb2455a0", // Poora ID yahan hai
-    measurementId: "G-8YW1D9GXBV"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:217ec241fe97febb2455a0",
+            measurementId: "G-8YW1D9GXBV"
+        };
+
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) { document.getElementById('sell-box').style.display = 'block'; }
-            else { window.location.href = 'index.html'; }
-        });
-
-        window.startPayment = () => {
-            const options = {
+        window.pay = () => {
+            var options = {
                 "key": "rzp_test_SUbyWO4SEc3wka",
-                "amount": "500", 
-                "currency": "INR",
-                "name": "College Bazaar",
+                "amount": "500",
                 "handler": async function (response) {
                     await addDoc(collection(db, "products"), {
-                        name: document.getElementById('pName').value,
-                        price: document.getElementById('pPrice').value,
-                        desc: document.getElementById('pDesc').value,
-                        imageUrl: document.getElementById('pImg').value,
-                        sellerId: auth.currentUser.uid,
+                        name: document.getElementById('n').value,
+                        price: document.getElementById('p').value,
+                        desc: document.getElementById('d').value,
+                        imageUrl: document.getElementById('i').value,
                         timestamp: serverTimestamp()
                     });
-                    alert("Success!"); window.location.href = "index.html";
+                    alert("Posted!"); window.location.href="index.html";
                 }
             };
             new Razorpay(options).open();
