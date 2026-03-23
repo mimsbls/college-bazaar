@@ -2,38 +2,70 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Details</title>
+    <title>Product Details</title>
     <style>
         body { font-family: sans-serif; margin: 0; background: #fff; }
-        .slider { display: flex; overflow-x: auto; height: 320px; background: #f9f9f9; scroll-snap-type: x mandatory; }
+        .slider { display: flex; overflow-x: auto; height: 350px; background: #f0f0f0; scroll-snap-type: x mandatory; border-bottom: 1px solid #ddd; }
         .slider img { width: 100%; object-fit: contain; flex-shrink: 0; scroll-snap-align: start; }
         .info { padding: 20px; }
-        .price { font-size: 26px; color: #28a745; font-weight: bold; }
-        .desc { white-space: pre-wrap; color: #444; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
+        .price { font-size: 28px; color: #28a745; font-weight: bold; margin-bottom: 5px; }
+        .name { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 15px; }
+        .desc-box { background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 5px solid #0088cc; }
+        .desc-text { white-space: pre-wrap; color: #444; line-height: 1.6; font-size: 16px; }
+        .back-btn { width: 100%; padding: 15px; background: #0088cc; color: white; border: none; border-radius: 10px; font-weight: bold; margin-top: 25px; cursor: pointer; font-size: 16px; }
+        #loading { text-align: center; padding: 50px; font-weight: bold; color: #666; }
     </style>
 </head>
 <body>
-    <div class="slider" id="images"></div>
-    <div class="info">
-        <div class="price" id="price"></div>
-        <h2 id="name" style="margin:5px 0;"></h2>
-        <div class="desc" id="desc"></div>
-        <button onclick="history.back()" style="width:100%; padding:15px; background:#0088cc; color:white; border:none; border-radius:8px; margin-top:30px; font-weight:bold;">← Back to Bazaar</button>
+    <div id="loading">Loading Details... ⏳</div>
+    
+    <div id="content" style="display:none;">
+        <div class="slider" id="imageSlider"></div>
+        <div class="info">
+            <div class="price" id="pPrice"></div>
+            <div class="name" id="pName"></div>
+            <div class="desc-box">
+                <div style="font-weight: bold; margin-bottom: 5px; color: #0088cc;">Description & Contact:</div>
+                <div class="desc-text" id="pDesc"></div>
+            </div>
+            <button class="back-btn" onclick="history.back()">← Back to Bazaar</button>
+        </div>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
-        const db = getFirestore(initializeApp(firebaseConfig));
-        const id = new URLSearchParams(window.location.search).get('id');
-        const snap = await getDoc(doc(db, "products", id));
-        if(snap.exists()){
-            const p = snap.data();
-            document.getElementById('name').innerText = p.name;
-            document.getElementById('price').innerText = "₹" + p.price;
-            document.getElementById('desc').innerText = p.desc;
-            const imgs = p.images || [p.imageUrl];
-            imgs.forEach(u => document.getElementById('images').innerHTML += `<img src="${u}">`);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (productId) {
+            const docRef = doc(db, "products", productId);
+            getDoc(docRef).then((snap) => {
+                if (snap.exists()) {
+                    const p = snap.data();
+                    document.getElementById('pName').innerText = p.name;
+                    document.getElementById('pPrice').innerText = "₹" + p.price;
+                    document.getElementById('pDesc').innerText = p.desc;
+
+                    const slider = document.getElementById('imageSlider');
+                    const images = p.images || [p.imageUrl];
+                    images.forEach(url => {
+                        if(url) slider.innerHTML += `<img src="${url}">`;
+                    });
+
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                } else {
+                    document.getElementById('loading').innerText = "Product not found! ❌";
+                }
+            }).catch(err => {
+                document.getElementById('loading').innerText = "Error loading data.";
+            });
         }
     </script>
 </body>
