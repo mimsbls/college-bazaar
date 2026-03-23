@@ -1,34 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Market 🎓</title>
-    <link rel="stylesheet" href="style.css">
+    <title>College Bazaar</title>
     <style>
-        #main-app { display: none; }
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #f4f7f6; font-family: sans-serif; }
-        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .google-btn { background: #4285F4; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        .sell-btn { position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
+        #login-page { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #main-page { display: none; padding: 20px; }
+        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { background: #4285F4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .sell-btn { position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-card">
-            <h1>Welcome to Campus Market 🎓</h1>
-            <p>Please login with Google to continue</p>
-            <button class="google-btn" id="loginBtn">Sign in with Google</button>
-        </div>
+    <div id="login-page">
+        <button class="btn" id="loginBtn">Sign in with Google</button>
     </div>
 
-    <div id="main-app">
-        <header style="background:#0088cc; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0;">Campus Market 🎓</h2>
-            <button id="logoutBtn" style="background:white; color:#0088cc; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">Logout</button>
+    <div id="main-page">
+        <header style="display:flex; justify-content:space-between; background:#0088cc; color:white; padding:15px;">
+            <h2>College Bazaar 🎓</h2>
+            <button id="logoutBtn" style="background:none; border:1px solid white; color:white; cursor:pointer;">Logout</button>
         </header>
-        <div id="product-feed" style="padding:20px;"></div>
+        <div id="feed"></div>
         <a href="sell.html" class="sell-btn">SELL ₹5</a>
     </div>
 
@@ -37,12 +32,51 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-       const firebaseConfig = {
-    apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
-    authDomain: "college-bazaar-e68cd.firebaseapp.com",
-    projectId: "college-bazaar-e68cd",
-    storageBucket: "college-bazaar-e68cd.firebasestorage.app",
-    messagingSenderId: "1795308257",
-    appId: "1:1795308257:web:217ec241fe97febb2455a0", // Poora ID yahan hai
-    measurementId: "G-8YW1D9GXBV"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:217ec241fe97febb2455a0",
+            measurementId: "G-8YW1D9GXBV"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('login-page').style.display = "none";
+                document.getElementById('main-page').style.display = "block";
+                loadProducts();
+            } else {
+                document.getElementById('login-page').style.display = "flex";
+                document.getElementById('main-page').style.display = "none";
+            }
+        });
+
+        function loadProducts() {
+            const q = query(collection(db, "products"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snap) => {
+                const feed = document.getElementById('feed');
+                feed.innerHTML = "";
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    feed.innerHTML += `
+                        <div class="card">
+                            <img src="${p.imageUrl}" style="width:100%; border-radius:8px;">
+                            <h3>${p.name} - ₹${p.price}</h3>
+                            <p>${p.desc}</p>
+                        </div>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
