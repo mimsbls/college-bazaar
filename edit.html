@@ -2,37 +2,38 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Ad</title>
+    <title>Edit Ad - College Bazaar</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; margin: 0; }
         .box { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; }
+        #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; border: 1px solid #ffcc80; }
         #loading-msg { text-align: center; color: #888; padding: 20px; font-weight: bold; }
         label { font-weight: bold; color: #555; display: block; margin-top: 15px; }
         input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fff; }
-        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 18px; }
-        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 18px; transition: 0.3s; }
+        .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="box">
         <h2 style="text-align:center; color:#0088cc;">Edit Your Ad 📝</h2>
         
-        <div id="status">Updating your ad... ⏳</div>
-        <div id="loading-msg">🔍 Fetching your old data...</div>
+        <div id="status">Updating your ad... Please wait ⏳</div>
+        <div id="loading-msg">🔍 Loading your data...</div>
 
         <div id="form-content" style="display:none;">
             <label>Product Name</label>
-            <input id="n" type="text" placeholder="Enter name">
+            <input id="n" type="text">
             
             <label>Price (₹)</label>
-            <input id="p" type="number" placeholder="Enter price">
+            <input id="p" type="number">
             
             <label>Description & Contact</label>
-            <textarea id="d" rows="5" placeholder="Enter details"></textarea>
+            <textarea id="d" rows="6"></textarea>
             
-            <button class="btn-save" id="saveBtn">Save Changes ✅</button>
-            <button class="btn-del" id="delBtn">Delete This Ad 🗑️</button>
+            <button class="btn-save" id="saveBtn">Update Now ✅</button>
+            <button class="btn-del" id="delBtn">Delete Ad 🗑️</button>
         </div>
         
         <p style="text-align:center; margin-top:15px;"><a href="index.html" style="color:#666; text-decoration:none;">← Back to Home</a></p>
@@ -50,70 +51,73 @@
             messagingSenderId: "1795308257", 
             appId: "1:1795308257:web:217ec241fe97febb2455a0" 
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        
-        if (!id) {
-            alert("ID nahi mili!");
-            window.location.href = "index.html";
-        }
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (!id) { location.href = "index.html"; }
 
         const docRef = doc(db, "products", id);
 
-        // --- Purana Data Bharne Ka Logic ---
-        async function fetchAndFill() {
+        // --- Data Fetch and Fill ---
+        async function init() {
             try {
                 const snap = await getDoc(docRef);
                 if (snap.exists()) {
                     const data = snap.data();
-                    
-                    // Boxes mein purana data dalna
                     document.getElementById('n').value = data.name || "";
                     document.getElementById('p').value = data.price || "";
                     document.getElementById('d').value = data.desc || "";
                     
-                    // Loading hatao aur form dikhao
                     document.getElementById('loading-msg').style.display = 'none';
                     document.getElementById('form-content').style.display = 'block';
                 } else {
-                    document.getElementById('loading-msg').innerText = "Data nahi mila! ❌";
+                    document.getElementById('loading-msg').innerText = "Ad not found!";
                 }
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loading-msg').innerText = "Error: Permission Denied ya Network issue!";
+            } catch (e) {
+                console.error("Fetch Error:", e);
+                alert("Error loading data!");
             }
         }
+        init();
 
-        // Run as soon as page loads
-        window.onload = fetchAndFill;
+        // --- Update Logic (Strong) ---
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const saveBtn = document.getElementById('saveBtn');
+            const statusDiv = document.getElementById('status');
 
-        // --- Save Changes ---
-        document.getElementById('saveBtn').onclick = async () => {
-            const status = document.getElementById('status');
-            status.style.display = "block";
-            
+            // UI Update
+            statusDiv.style.display = "block";
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Processing...";
+
+            const newData = {
+                name: document.getElementById('n').value,
+                price: document.getElementById('p').value,
+                desc: document.getElementById('d').value
+            };
+
             try {
-                await updateDoc(docRef, {
-                    name: document.getElementById('n').value,
-                    price: document.getElementById('p').value,
-                    desc: document.getElementById('d').value
-                });
-                alert("Mst! Update ho gaya. ✅");
+                // Direct update call
+                await updateDoc(docRef, newData);
+                console.log("Update Success!");
+                alert("Ad Updated Successfully! ✅");
                 window.location.href = "index.html";
-            } catch (e) {
-                alert("Error: " + e.message);
-                status.style.display = "none";
+            } catch (error) {
+                console.error("Update Error:", error);
+                alert("Update Failed: " + error.message);
+                statusDiv.style.display = "none";
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Update Now ✅";
             }
-        };
+        });
 
-        // --- Delete ---
+        // --- Delete Logic ---
         document.getElementById('delBtn').onclick = async () => {
-            if(confirm("Pakka delete karna hai?")){
+            if(confirm("Confirm Delete?")) {
                 await deleteDoc(docRef);
-                window.location.href = "index.html";
+                location.href = "index.html";
             }
         };
     </script>
