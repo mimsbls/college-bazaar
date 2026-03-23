@@ -9,9 +9,8 @@
         #main-app { display: none; }
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #f4f7f6; font-family: sans-serif; }
         .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .google-btn { background: #4285F4; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold; transition: 0.3s; }
-        .google-btn:hover { background: #357abd; }
-        .sell-btn { position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100; }
+        .google-btn { background: #4285F4; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        .sell-btn { position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -19,28 +18,24 @@
     <div id="login-screen">
         <div class="login-card">
             <h1>Welcome to Campus Market 🎓</h1>
-            <p>Sign in to see products and start selling!</p>
+            <p>Please login with Google to continue</p>
             <button class="google-btn" id="loginBtn">Sign in with Google</button>
         </div>
     </div>
 
     <div id="main-app">
-        <header style="background:#0088cc; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center; position: sticky; top:0; z-index:10;">
+        <header style="background:#0088cc; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
             <h2 style="margin:0;">Campus Market 🎓</h2>
             <button id="logoutBtn" style="background:white; color:#0088cc; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">Logout</button>
         </header>
-
-        <div id="product-feed" class="feed" style="padding:20px; max-width: 800px; margin: auto;">
-            <p style="text-align:center;">Loading products...</p>
-        </div>
-
+        <div id="product-feed" style="padding:20px;"></div>
         <a href="sell.html" class="sell-btn">SELL ₹5</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
@@ -48,23 +43,4 @@
             projectId: "college-bazaar-e68cd",
             storageBucket: "college-bazaar-e68cd.firebasestorage.app",
             messagingSenderId: "1795308257",
-            appId: "1:1795308257:web:217ec241fe97febb2455a0",
-            measurementId: "G-8YW1D9GXBV"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        document.getElementById('loginBtn').onclick = () => {
-            signInWithPopup(auth, provider).catch(err => alert("Login Error: " + err.message));
-        };
-
-        document.getElementById('logoutBtn').onclick = () => {
-            signOut(auth).then(() => window.location.reload());
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('
+            appId: "1:1795308257:web:217ec241fe97febb245
