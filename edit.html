@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +26,7 @@
         <input id="p" type="number">
         
         <label>Description & Contact</label>
-        <textarea id="d" rows="5"></textarea>
+        <textarea id="d" rows="6"></textarea>
         
         <button class="btn-save" id="saveBtn">Save Changes ✅</button>
         <button class="btn-del" id="delBtn">Delete Ad 🗑️</button>
@@ -38,21 +38,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", 
-            authDomain: "college-bazaar-e68cd.firebaseapp.com", 
-            projectId: "college-bazaar-e68cd", 
-            storageBucket: "college-bazaar-e68cd.firebasestorage.app", 
-            messagingSenderId: "1795308257", 
-            appId: "1:1795308257:web:217ec241fe97febb2455a0" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         const id = new URLSearchParams(window.location.search).get('id');
         const docRef = doc(db, "products", id);
 
-        // --- Purana data load ho raha hai (Smoothly) ---
+        // --- Purana Data Load Ho Raha Hai ---
         getDoc(docRef).then(snap => {
             if(snap.exists()){
                 const data = snap.data();
@@ -62,7 +55,7 @@
             }
         });
 
-        // --- Simple & Fast Update ---
+        // --- Fast Update ---
         document.getElementById('saveBtn').onclick = async () => {
             document.getElementById('status').style.display = "block";
             
@@ -72,12 +65,13 @@
                 desc: document.getElementById('d').value
             });
             
-            location.href = "index.html"; // Turant wapas bhejo
+            // Bina kisi delay ke turant redirect
+            location.href = "index.html";
         };
 
         // --- Delete ---
         document.getElementById('delBtn').onclick = async () => {
-            if(confirm("Pakka delete karna hai?")){
+            if(confirm("Confirm Delete?")){
                 await deleteDoc(docRef);
                 location.href = "index.html";
             }
