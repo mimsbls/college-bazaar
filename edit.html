@@ -4,35 +4,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Ad</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; margin: 0; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
         .box { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0088cc; }
-        label { font-weight: bold; display: block; margin-top: 15px; color: #444; }
-        input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 20px; }
-        .btn-delete { background: #fff; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; }
         #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>Edit Your Ad 📝</h2>
+        <h2 style="text-align:center; color:#0088cc;">Edit Your Ad 📝</h2>
         <div id="status">Updating your ad... ⏳</div>
         
         <label>Product Name</label>
-        <input id="n" type="text" placeholder="Loading...">
+        <input id="n" type="text">
         
         <label>Price (₹)</label>
         <input id="p" type="number">
         
         <label>Description & Phone</label>
-        <textarea id="d" rows="4"></textarea>
+        <textarea id="d" rows="5"></textarea>
         
-        <label>Change Photo (Optional):</label>
+        <label>Update Photo (Optional):</label>
         <input type="file" id="f" accept="image/*">
         
         <button class="btn-save" id="saveBtn">Save Changes ✅</button>
-        <button class="btn-delete" id="delBtn">Delete This Ad 🗑️</button>
+        <button class="btn-del" id="delBtn">Delete Ad 🗑️</button>
         <p style="text-align:center;"><a href="index.html" style="color:#666; text-decoration:none; font-size:14px;">Cancel</a></p>
     </div>
 
@@ -47,17 +45,17 @@
         const id = new URLSearchParams(window.location.search).get('id');
         const docRef = doc(db, "products", id);
 
-        // Load Data
+        // --- Purana Data Load Karo ---
         getDoc(docRef).then(snap => {
             if(snap.exists()){
                 const data = snap.data();
-                document.getElementById('n').value = data.name;
-                document.getElementById('p').value = data.price;
-                document.getElementById('d').value = data.desc;
+                document.getElementById('n').value = data.name || "";
+                document.getElementById('p').value = data.price || "";
+                document.getElementById('d').value = data.desc || "";
             }
         });
 
-        // Update Logic
+        // --- Update Karo ---
         document.getElementById('saveBtn').onclick = async () => {
             document.getElementById('status').style.display = "block";
             document.getElementById('saveBtn').disabled = true;
@@ -73,17 +71,17 @@
                 const fd = new FormData(); fd.append("image", file);
                 const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {method:"POST", body:fd});
                 const j = await res.json();
-                updateData.images = [j.data.url];
+                updateData.images = [j.data.url]; // Nayi image update
             }
 
             await updateDoc(docRef, updateData);
-            alert("Success! Your ad is updated. ✅");
+            alert("Success! Ad updated. ✅");
             location.href = "index.html";
         };
 
-        // Delete Logic
+        // --- Delete Karo ---
         document.getElementById('delBtn').onclick = async () => {
-            if(confirm("Bhai, pakka delete karna hai?")){
+            if(confirm("Pakka delete karna hai?")){
                 await deleteDoc(docRef);
                 location.href = "index.html";
             }
