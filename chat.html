@@ -2,70 +2,90 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Chat</title>
+    <title>College Bazaar Chat</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #eee; display: flex; flex-direction: column; height: 100vh; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; }
-        .msg { background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; max-width: 80%; }
-        .owner-msg { background: #e3f2fd; border-left: 5px solid #0088cc; }
-        .input-area { background: white; padding: 15px; display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
+        body { font-family: sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #075e54; color: white; padding: 15px; font-weight: bold; position: sticky; top: 0; display: flex; align-items: center; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 80%; font-size: 15px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .owner-msg { background: #dcf8c6; align-self: flex-end; border-right: 4px solid #128c7e; }
+        .user-msg { background: white; align-self: flex-start; }
+        .tag { font-size: 10px; font-weight: bold; margin-bottom: 3px; display: block; }
+        .owner-tag { color: #128c7e; }
+        .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; }
+        input { flex: 1; padding: 12px; border: none; border-radius: 20px; outline: none; font-size: 16px; }
+        button { background: #128c7e; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <header style="background:#0088cc; color:white; padding:15px;"><a href="index.html" style="color:white; text-decoration:none;">← Back</a> | Live Chat</header>
+    <header><a href="index.html" style="color:white; text-decoration:none; margin-right:15px;">←</a> Live Discussion</header>
     <div id="chat-box"></div>
     <div class="input-area">
-        <input id="m" placeholder="Type a message...">
-        <button onclick="send()">Send</button>
+        <input id="m" placeholder="Message..." autocomplete="off">
+        <button id="sendBtn">➤</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI", authDomain: "college-bazaar-e68cd.firebaseapp.com", projectId: "college-bazaar-e68cd", storageBucket: "college-bazaar-e68cd.firebasestorage.app", messagingSenderId: "1795308257", appId: "1:1795308257:web:217ec241fe97febb2455a0" };
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:217ec241fe97febb2455a0"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
-        let ownerEmail = "";
 
-        // Get Owner Email
-        getDoc(doc(db, "products", productId)).then(d => { ownerEmail = d.data().sellerEmail; });
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || !productId) return;
 
-        // Load Messages
-        const q = query(collection(db, "products", productId, "messages"), orderBy("timestamp", "asc"));
-        onSnapshot(q, (snap) => {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = "";
-            snap.forEach(d => {
-                const m = d.data();
-                const isOwner = m.userEmail === ownerEmail;
-                box.innerHTML += `
-                    <div class="msg ${isOwner ? 'owner-msg' : ''}">
-                        <small style="color:#0088cc;">${isOwner ? '[Owner] ' : ''}${m.userName}</small><br>
-                        ${m.text}
-                    </div>`;
+            // Get Product Owner
+            const pDoc = await getDoc(doc(db, "products", productId));
+            const ownerEmail = pDoc.exists() ? pDoc.data().sellerEmail : "";
+
+            // Load Real-time Messages
+            const q = query(collection(db, "products", productId, "messages"), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snap) => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML = "";
+                snap.forEach(d => {
+                    const m = d.data();
+                    const isOwner = m.userEmail === ownerEmail;
+                    box.innerHTML += `
+                        <div class="msg ${isOwner ? 'owner-msg' : 'user-msg'}">
+                            <span class="tag ${isOwner ? 'owner-tag' : ''}">${isOwner ? '⭐ OWNER' : m.userName}</span>
+                            ${m.text}
+                        </div>`;
+                });
+                box.scrollTop = box.scrollHeight;
             });
-            box.scrollTop = box.scrollHeight;
+
+            // Send Function
+            const sendMessage = async () => {
+                const txt = document.getElementById('m').value;
+                if(!txt.trim()) return;
+                await addDoc(collection(db, "products", productId, "messages"), {
+                    text: txt,
+                    userEmail: user.email,
+                    userName: user.displayName || "Student",
+                    timestamp: serverTimestamp()
+                });
+                document.getElementById('m').value = "";
+            };
+
+            document.getElementById('sendBtn').onclick = sendMessage;
+            document.getElementById('m').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
         });
-
-        window.send = async () => {
-            const txt = document.getElementById('m').value;
-            if(!txt) return;
-            await addDoc(collection(db, "products", productId, "messages"), {
-                text: txt,
-                userEmail: auth.currentUser.email,
-                userName: auth.currentUser.displayName,
-                timestamp: serverTimestamp()
-            });
-            document.getElementById('m').value = "";
-        };
     </script>
 </body>
 </html>
