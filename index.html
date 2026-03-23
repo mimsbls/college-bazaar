@@ -6,17 +6,19 @@
     <title>Campus Market 🎓</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Pehle sab chhupa rahega */
+        /* Pehle sab chhupa rahega jab tak login na ho */
         #main-app { display: none; }
         #login-screen { 
             display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; height: 100vh; text-align: center; background: #f4f7f6;
+            justify-content: center; height: 100vh; text-align: center; 
+            background: #f4f7f6; font-family: sans-serif;
         }
         .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .google-btn { 
             background: #4285F4; color: white; border: none; padding: 12px 24px; 
-            border-radius: 5px; font-size: 18px; cursor: pointer; margin-top: 20px;
+            border-radius: 5px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold;
         }
+        .google-btn:hover { background: #357abd; }
     </style>
 </head>
 <body>
@@ -24,22 +26,22 @@
     <div id="login-screen">
         <div class="login-card">
             <h1>Welcome to Campus Market 🎓</h1>
-            <p>Please login with your college email to continue</p>
-            <button class="google-btn" onclick="login()">Sign in with Google</button>
+            <p>Please login with your Google account to continue.</p>
+            <button class="google-btn" id="btn-login">Sign in with Google</button>
         </div>
     </div>
 
     <div id="main-app">
-        <header>
-            <h1>Campus Market 🎓</h1>
-            <button onclick="logout()" style="float:right; background:none; color:white; border:1px solid white; padding:5px; margin:10px; border-radius:5px;">Logout</button>
+        <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #0088cc; color: white;">
+            <h2>Campus Market 🎓</h2>
+            <button onclick="logout()" style="background: white; color: #0088cc; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Logout</button>
         </header>
 
-        <div id="product-feed" class="feed">
+        <div id="product-feed" class="feed" style="padding: 20px;">
             <p style="text-align:center;">Loading products...</p>
         </div>
 
-        <a href="sell.html" class="sell-btn">SELL ₹5</a>
+        <a href="sell.html" class="sell-btn" style="position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">SELL ₹5</a>
     </div>
 
     <script type="module">
@@ -60,40 +62,51 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-        window.login = () => signInWithPopup(auth, new GoogleAuthProvider());
-        window.logout = () => signOut(auth).then(() => window.location.reload());
+        // Login Button Click Logic
+        document.getElementById('btn-login').onclick = () => {
+            signInWithPopup(auth, provider)
+                .then((result) => { console.log("User Logged In"); })
+                .catch((error) => { alert("Login Error: " + error.message); });
+        };
 
-        // Sabse important logic yahan hai
+        // Logout Function
+        window.logout = () => {
+            signOut(auth).then(() => { window.location.reload(); });
+        };
+
+        // Check Login State (Auth Guard)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Agar user login hai, toh feed dikhao aur login screen hatao
                 document.getElementById('login-screen').style.display = "none";
                 document.getElementById('main-app').style.display = "block";
                 loadFeed();
             } else {
-                // Agar logout hai, toh sirf login screen dikhao
                 document.getElementById('login-screen').style.display = "flex";
                 document.getElementById('main-app').style.display = "none";
             }
         });
 
+        // Products Load Karne ka Function
         function loadFeed() {
             const q = query(collection(db, "products"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snapshot) => {
                 const feed = document.getElementById('product-feed');
                 feed.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const p = doc.data();
+                if (snapshot.empty) {
+                    feed.innerHTML = "<p style='text-align:center;'>Abhi koi products nahi hain. Pehle seller bano!</p>";
+                    return;
+                }
+                snapshot.forEach(docSnap => {
+                    const p = docSnap.data();
                     feed.innerHTML += `
-                        <div class="card">
-                            <img src="${p.imageUrl || 'https://via.placeholder.com/300'}" class="p-img">
-                            <div class="p-info">
-                                <h3>${p.name}</h3>
-                                <p class="price">₹${p.price}</p>
-                                <button onclick="alert('Contact: ${p.desc}')">Details</button>
-                                <button class="chat-btn" onclick="location.href='chat.html?id=${doc.id}'">Live Comments</button>
-                            </div>
+                        <div class="card" style="border: 1px solid #ddd; border-radius: 10px; margin-bottom: 20px; padding: 10px; background: white;">
+                            <img src="${p.imageUrl || 'https://via.placeholder.com/300'}" style="width:100%; border-radius: 10px;">
+                            <h3>${p.name}</h3>
+                            <p style="color: green; font-weight: bold;">₹${p.price}</p>
+                            <button onclick="alert('Contact Seller: ${p.desc}')" style="background:#0088cc; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Details</button>
+                            <button onclick="location.href='chat.html?id=${docSnap.id}'" style="background:#555; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-left:10px;">Chat</button>
                         </div>`;
                 });
             });
