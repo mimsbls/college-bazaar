@@ -2,37 +2,32 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit My Ad</title>
+    <title>Edit Ad</title>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
         .box { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         #status { text-align: center; color: #ff5722; font-weight: bold; display: none; margin-bottom: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; }
-        input, textarea { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        label { font-weight: bold; color: #555; display: block; margin-top: 15px; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 18px; }
-        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; }
+        .btn-del { background: none; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 10px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
     <div class="box">
         <h2 style="text-align:center; color:#0088cc;">Edit Your Ad 📝</h2>
-        <div id="status">Updating your ad... Please wait ⏳</div>
+        <div id="status">Updating your ad... ⏳</div>
         
-        <div id="loading-msg" style="text-align:center; color:#888;">Fetching your data...</div>
-
-        <div id="form-content" style="display:none;">
-            <label>Product Name</label>
-            <input id="n" type="text">
-            
-            <label>Price (₹)</label>
-            <input id="p" type="number">
-            
-            <label>Description & Contact</label>
-            <textarea id="d" rows="5"></textarea>
-            
-            <button class="btn-save" id="saveBtn">Save Changes ✅</button>
-            <button class="btn-del" id="delBtn">Delete This Ad 🗑️</button>
-        </div>
-        <p style="text-align:center; margin-top:15px;"><a href="index.html" style="color:#666; text-decoration:none;">Cancel</a></p>
+        <label>Product Name</label>
+        <input id="n" type="text" placeholder="Loading...">
+        <label>Price (₹)</label>
+        <input id="p" type="number">
+        <label>Description & Contact</label>
+        <textarea id="d" rows="5"></textarea>
+        
+        <button class="btn-save" id="saveBtn">Save Changes ✅</button>
+        <button class="btn-del" id="delBtn">Delete Ad 🗑️</button>
+        <p style="text-align:center; margin-top:15px;"><a href="index.html" style="color:#666; text-decoration:none;">← Cancel</a></p>
     </div>
 
     <script type="module">
@@ -46,38 +41,29 @@
         const id = new URLSearchParams(window.location.search).get('id');
         const docRef = doc(db, "products", id);
 
-        // --- Purana Data Load Karo ---
-        async function getOldData() {
-            const snap = await getDoc(docRef);
+        // Auto-fill existing data
+        getDoc(docRef).then(snap => {
             if(snap.exists()){
                 const data = snap.data();
                 document.getElementById('n').value = data.name || "";
                 document.getElementById('p').value = data.price || "";
                 document.getElementById('d').value = data.desc || "";
-                document.getElementById('loading-msg').style.display = 'none';
-                document.getElementById('form-content').style.display = 'block';
             }
-        }
-        getOldData();
+        });
 
-        // --- Save Update ---
         document.getElementById('saveBtn').onclick = async () => {
             document.getElementById('status').style.display = "block";
-            document.getElementById('saveBtn').disabled = true;
-            
             await updateDoc(docRef, {
                 name: document.getElementById('n').value,
                 price: document.getElementById('p').value,
                 desc: document.getElementById('d').value
             });
-            
-            alert("Updated Successfully! ✅");
+            alert("Success! Ad updated. ✅");
             location.href = "index.html";
         };
 
-        // --- Delete Ad ---
         document.getElementById('delBtn').onclick = async () => {
-            if(confirm("Bhai, kya aap sach mein ye ad hatana chahte ho?")){
+            if(confirm("Bhai, kya aap sach mein ye ad delete karna chahte ho?")){
                 await deleteDoc(docRef);
                 location.href = "index.html";
             }
