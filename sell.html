@@ -4,34 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sell - College Bazaar</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .box { max-width: 400px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .pay-btn { background: #28a745; width: 100%; color: white; padding: 15px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn { background: #28a745; width: 100%; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="sell-form" style="display:none;">
-        <h2 style="text-align:center; color:#0088cc;">Post New Product 🎓</h2>
-        <p style="text-align:center; color:#777;">Pay ₹5 listing fee to go live</p>
-        
-        <input type="text" id="pName" placeholder="What are you selling?">
+    <div class="box" id="sell-box" style="display:none;">
+        <h2 style="text-align:center; color:#0088cc;">Sell Something 🎓</h2>
+        <input type="text" id="pName" placeholder="Product Name">
         <input type="number" id="pPrice" placeholder="Price (₹)">
-        <textarea id="pDesc" rows="3" placeholder="Description & Contact info"></textarea>
-        <input type="text" id="pImg" placeholder="Image URL (Link)">
-        
-        <button class="pay-btn" onclick="startPayment()">Pay ₹5 & Publish</button>
-        <p style="text-align:center;"><a href="index.html" style="color:#666; text-decoration:none;">Cancel</a></p>
+        <textarea id="pDesc" placeholder="Contact/Description"></textarea>
+        <input type="text" id="pImg" placeholder="Image Link (URL)">
+        <button class="btn" onclick="startPayment()">Pay ₹5 & Post</button>
+        <p style="text-align:center;"><a href="index.html">Cancel</a></p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
@@ -44,11 +40,11 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         onAuthStateChanged(auth, (user) => {
-            if (user) { document.getElementById('sell-form').style.display = 'block'; }
+            if (user) { document.getElementById('sell-box').style.display = 'block'; }
             else { window.location.href = 'index.html'; }
         });
 
@@ -67,7 +63,7 @@
                         sellerId: auth.currentUser.uid,
                         timestamp: serverTimestamp()
                     });
-                    alert("Product Posted!"); window.location.href = "index.html";
+                    alert("Success!"); window.location.href = "index.html";
                 }
             };
             new Razorpay(options).open();
