@@ -1,1 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit My Ad - College Bazaar</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
+        .box { max-width: 450px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0088cc; margin-top: 0; }
+        label { font-weight: bold; display: block; margin-top: 15px; color: #444; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; }
+        input:focus, textarea:focus { border-color: #0088cc; }
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 25px; }
+        .btn-delete { background: #fff; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
 
+    <div class="box">
+        <h2>Update Your Ad 📝</h2>
+        
+        <label>Product Name</label>
+        <input id="n" type="text" placeholder="Loading...">
+        
+        <label>Price (₹)</label>
+        <input id="p" type="number">
+        
+        <label>Description & Contact</label>
+        <textarea id="d" rows="4"></textarea>
+        
+        <label>Image URL</label>
+        <input id="i" type="text">
+        
+        <button class="btn-save" id="saveBtn">Save Changes</button>
+        <button class="btn-delete" id="delBtn">Delete This Ad</button>
+        <a href="index.html" class="back-link">← Cancel & Go Back</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfgI",
+            authDomain: "college-bazaar-e68cd.firebaseapp.com",
+            projectId: "college-bazaar-e68cd",
+            storageBucket: "college-bazaar-e68cd.firebasestorage.app",
+            messagingSenderId: "1795308257",
+            appId: "1:1795308257:web:217ec241fe97febb2455a0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || !productId) { location.href="index.html"; return; }
+
+            const docRef = doc(db, "products", productId);
+            const dSnap = await getDoc(docRef);
+
+            if (dSnap.exists()) {
+                const data = dSnap.data();
+                
+                // Security check
+                if(data.sellerEmail !== user.email) {
+                    alert("Unauthorized Access!");
+                    location.href="index.html";
+                    return;
+                }
+                
+                document.getElementById('n').value = data.name;
+                document.getElementById('p').value = data.price;
+                document.getElementById('d').value = data.desc;
+                document.getElementById('i').value = data.imageUrl;
+            }
+
+            // Update logic
+            document.getElementById('saveBtn').onclick = async () => {
+                document.getElementById('saveBtn').innerText = "Saving...";
+                await updateDoc(docRef, {
+                    name: document.getElementById('n').value,
+                    price: document.getElementById('p').value,
+                    desc: document.getElementById('d').value,
+                    imageUrl: document.getElementById('i').value
+                });
+                alert("Updated successfully! ✅");
+                location.href = "index.html";
+            };
+
+            // Delete logic
+            document.getElementById('delBtn').onclick = async () => {
+                if(confirm("Are you sure you want to remove this ad forever?")) {
+                    await deleteDoc(docRef);
+                    alert("Ad Deleted!");
+                    location.href = "index.html";
+                }
+            };
+        });
+    </script>
+</body>
+</html>
