@@ -12,26 +12,27 @@
         .card-body { padding: 12px; }
         .price { color: #28a745; font-size: 20px; font-weight: bold; }
         .btn-group { display: flex; gap: 8px; margin-top: 10px; }
-        .btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 14px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 14px; }
         .btn-detail { background: #6c757d; color: white; }
         .btn-chat { background: #0088cc; color: white; }
-        .sell-btn { position: fixed; bottom: 20px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        #login-screen { text-align: center; padding-top: 100px; }
+        .sell-btn { position: fixed; bottom: 25px; right: 20px; background: #ff5722; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 99; }
+        #login-screen { text-align: center; padding-top: 100px; display: none; }
+        #app { display: none; }
     </style>
 </head>
 <body>
     <div id="login-screen">
-        <h1>College Bazaar 🎓</h1>
+        <h1 style="font-size: 2.5rem;">College Bazaar 🎓</h1>
         <p>Campus Marketplace</p>
-        <button id="loginBtn" style="background:#4285F4; color:white; border:none; padding:15px 30px; border-radius:5px; font-size:18px; cursor:pointer; font-weight:bold;">Sign in with Google</button>
+        <button id="loginBtn" style="background:#4285F4; color:white; border:none; padding:15px 40px; border-radius:30px; font-size:18px; cursor:pointer; font-weight:bold;">Sign in with Google</button>
     </div>
 
-    <div id="app" style="display:none;">
+    <div id="app">
         <header>
-            <b>College Bazaar</b>
-            <button id="logoutBtn" style="color:white; background:none; border:1px solid white; padding:5px; border-radius:4px; cursor:pointer;">Logout</button>
+            <span style="font-size: 20px; font-weight: bold;">College Bazaar</span>
+            <button id="logoutBtn" style="color:white; background:none; border:1px solid white; padding:5px 10px; border-radius:5px; cursor:pointer;">Logout</button>
         </header>
-        <div id="feed" style="padding-bottom:80px;"></div>
+        <div id="feed" style="padding-bottom:100px;"></div>
         <a href="sell.html" class="sell-btn">➕ SELL (₹5)</a>
     </div>
 
@@ -65,19 +66,18 @@
                 let html = "";
                 snap.forEach(doc => {
                     const p = doc.data();
-                    // Dono cases handle honge: Purana imageUrl aur Naya images array
                     const mainImg = p.images ? p.images[0] : (p.imageUrl || 'https://via.placeholder.com/400');
                     html += `
                     <div class="card">
                         <img src="${mainImg}">
                         <div class="card-body">
                             <div class="price">₹${p.price}</div>
-                            <div style="font-weight:bold; margin:5px 0;">${p.name}</div>
+                            <div style="font-weight:bold; margin:5px 0; font-size:18px;">${p.name}</div>
                             <div class="btn-group">
                                 <a href="product.html?id=${doc.id}" class="btn btn-detail">🔍 Details</a>
                                 <a href="chat.html?id=${doc.id}" class="btn btn-chat">💬 Chat</a>
                             </div>
-                            ${p.sellerEmail === email ? `<a href="edit.html?id=${doc.id}" style="display:block; text-align:center; margin-top:10px; font-size:12px; color:#0088cc; text-decoration:none;">📝 Edit Ad</a>` : ''}
+                            ${p.sellerEmail === email ? `<a href="edit.html?id=${doc.id}" style="display:block; text-align:center; margin-top:12px; font-size:13px; color:#0088cc; text-decoration:none; font-weight:bold;">📝 Manage My Ad</a>` : ''}
                         </div>
                     </div>`;
                 });
