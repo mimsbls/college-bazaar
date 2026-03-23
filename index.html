@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Bazaar Feed</title>
+    <title>College Bazaar</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1>Campus Market 🎓</h1>
+        <div id="auth-section" style="padding: 5px;">
+            <button id="loginBtn" onclick="login()" style="background: white; color: #0088cc;">Google Login</button>
+            <span id="userName" style="color: white; font-weight: bold;"></span>
+        </div>
     </header>
 
     <div id="product-feed" class="feed">
@@ -20,29 +24,36 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Aapka Config jo screenshot mein tha
         const firebaseConfig = {
             apiKey: "AIzaSyC9B6PGzPS7fInBCDGqtdhlViLQ5HGgfI",
             authDomain: "college-bazaar-e68cd.firebaseapp.com",
             projectId: "college-bazaar-e68cd",
             storageBucket: "college-bazaar-e68cd.firebasestorage.app",
             messagingSenderId: "1795308257",
-            appId: "1:1795308257:web:9f2d5926063c2a592455a0",
-            measurementId: "G-10JPFK7ELY"
+            appId: "1:1795308257:web:9f2d5926063c2a592455a0"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Feed Load Karne ka Logic
+        // Login Function
+        window.login = () => signInWithPopup(auth, new GoogleAuthProvider());
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('loginBtn').style.display = "none";
+                document.getElementById('userName').innerText = "Hi, " + user.displayName;
+            }
+        });
+
+        // Feed Load logic with Chat Link
         const q = query(collection(db, "products"), orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
             const feed = document.getElementById('product-feed');
             feed.innerHTML = "";
-            if (snapshot.empty) {
-                feed.innerHTML = "<p>Koi product nahi hai. Pehle sell button pe click karke add karein!</p>";
-            }
             snapshot.forEach(doc => {
                 const p = doc.data();
                 feed.innerHTML += `
@@ -51,11 +62,10 @@
                         <div class="p-info">
                             <h3>${p.name}</h3>
                             <p class="price">₹${p.price}</p>
-                            <button onclick="alert('Description: ${p.desc}')">Description</button>
-                            <button class="chat-btn" onclick="alert('Comment section coming soon!')">Live Comments</button>
+                            <button onclick="alert('Contact: ${p.desc}')">Details</button>
+                            <button class="chat-btn" style="background:#555;" onclick="location.href='chat.html?id=${doc.id}'">Live Comments</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         });
     </script>
