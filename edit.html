@@ -3,39 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit My Ad - College Bazaar</title>
+    <title>Edit Ad - College Bazaar</title>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
         .box { max-width: 450px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #0088cc; margin-top: 0; }
         label { font-weight: bold; display: block; margin-top: 15px; color: #444; font-size: 14px; }
         input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; outline: none; }
-        input:focus, textarea:focus { border-color: #0088cc; }
         .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 25px; }
         .btn-delete { background: #fff; color: #dc3545; border: 1px solid #dc3545; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 12px; }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; font-size: 14px; }
+        #status { color: #d9534f; text-align: center; font-weight: bold; display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
-
     <div class="box">
         <h2>Update Your Ad 📝</h2>
-        
+        <div id="status">Updating Data... ⏳</div>
+
         <label>Product Name</label>
-        <input id="n" type="text" placeholder="Loading...">
+        <input id="n" type="text">
         
         <label>Price (₹)</label>
         <input id="p" type="number">
         
-        <label>Description & Contact</label>
-        <textarea id="d" rows="4"></textarea>
+        <label>Description</label>
+        <textarea id="d" rows="3"></textarea>
         
-        <label>Image URL</label>
-        <input id="i" type="text">
+        <label>Change Photo (Optional):</label>
+        <input type="file" id="newFile" accept="image/*">
         
         <button class="btn-save" id="saveBtn">Save Changes</button>
-        <button class="btn-delete" id="delBtn">Delete This Ad</button>
-        <a href="index.html" class="back-link">← Cancel & Go Back</a>
+        <button class="btn-delete" id="delBtn">Delete Ad</button>
+        <a href="index.html" style="display:block; text-align:center; margin-top:15px; color:#666; text-decoration:none;">← Back</a>
     </div>
 
     <script type="module">
@@ -58,47 +57,46 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
+        let oldImageUrl = "";
 
         onAuthStateChanged(auth, async (user) => {
-            if (!user || !productId) { location.href="index.html"; return; }
-
+            if (!user || !productId) return;
             const docRef = doc(db, "products", productId);
-            const dSnap = await getDoc(docRef);
-
-            if (dSnap.exists()) {
-                const data = dSnap.data();
-                
-                // Security check
-                if(data.sellerEmail !== user.email) {
-                    alert("Unauthorized Access!");
-                    location.href="index.html";
-                    return;
-                }
-                
+            const snap = await getDoc(docRef);
+            if(snap.exists()){
+                const data = snap.data();
                 document.getElementById('n').value = data.name;
                 document.getElementById('p').value = data.price;
                 document.getElementById('d').value = data.desc;
-                document.getElementById('i').value = data.imageUrl;
+                oldImageUrl = data.imageUrl;
             }
 
-            // Update logic
             document.getElementById('saveBtn').onclick = async () => {
-                document.getElementById('saveBtn').innerText = "Saving...";
+                document.getElementById('status').style.display = "block";
+                const file = document.getElementById('newFile').files[0];
+                let finalUrl = oldImageUrl;
+
+                if(file){
+                    const formData = new FormData();
+                    formData.append("image", file);
+                    const res = await fetch("https://api.imgbb.com/1/upload?key=16a0ea2b07218caafa04e2ac8dffbe1c", {method:"POST", body:formData});
+                    const d = await res.json();
+                    finalUrl = d.data.url;
+                }
+
                 await updateDoc(docRef, {
                     name: document.getElementById('n').value,
                     price: document.getElementById('p').value,
                     desc: document.getElementById('d').value,
-                    imageUrl: document.getElementById('i').value
+                    imageUrl: finalUrl
                 });
-                alert("Updated successfully! ✅");
+                alert("Updated! ✅");
                 location.href = "index.html";
             };
 
-            // Delete logic
             document.getElementById('delBtn').onclick = async () => {
-                if(confirm("Are you sure you want to remove this ad forever?")) {
+                if(confirm("Delete permanently?")){
                     await deleteDoc(docRef);
-                    alert("Ad Deleted!");
                     location.href = "index.html";
                 }
             };
